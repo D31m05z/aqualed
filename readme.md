@@ -11,7 +11,7 @@ requirements
 ------------
 
 ```
-apt install cmake 
+apt install cmake libegl1-mesa-dev libgles2-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev 
 ```
 
 build 3rdparty

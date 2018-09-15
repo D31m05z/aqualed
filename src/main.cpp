@@ -1,7 +1,14 @@
+
+#define GLFW_INCLUDE_ES2
 #include <imgui.h>
 #include <imgui/imgui_glfw.h>
-#include <stdio.h>
 #include <GLFW/glfw3.h>
+
+#include <wiringPi.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+
 
 static void error_callback(int error, const char* description)
 {
@@ -25,6 +32,16 @@ int main(int, char**)
     bool show_calibration_window = false;
     ImVec4 clear_color = ImColor(114, 144, 154);
 
+
+   int bright = 0;
+
+    printf ("PWM test\n") ;
+
+    if (wiringPiSetup () == -1)
+        return 1;
+
+    pinMode (1, PWM_OUTPUT) ;
+
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
@@ -34,7 +51,10 @@ int main(int, char**)
         {
             static float f = 0.0f;
             ImGui::Text("turn on");
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+            if(ImGui::SliderFloat("float", &f, 0.0f, 1024.0f)) {
+               pwmWrite(1, f);
+	    }
+
             ImGui::ColorEdit3("clear color", (float*)&clear_color);
 
             if (ImGui::Button("Calibration")) show_calibration_window ^= 1;
@@ -50,6 +70,17 @@ int main(int, char**)
             ImGui::Begin("Calibration", &show_test_window);
             ImGui::Text("rasberry");
             ImGui::End();
+	    
+	    /*for (bright = 0 ; bright < 1024 ; ++bright)
+	    {
+	        pwmWrite (1, bright) ;
+	    }
+
+	    for (bright = 1023 ; bright >= 0 ; --bright)
+	    {
+	        pwmWrite (1, bright) ;
+            }*/
+
         }
 
         if (show_test_window)
