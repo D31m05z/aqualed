@@ -1,18 +1,19 @@
---------
 checkout
 --------
+
+```
 git clone https://github.com/d31m05z/aqualed.git
 cd aqualed
 git submodule update --init
+```
 
-------------
 requirements
 ------------
- - cmake
- TODO: dev packages
 
+```
+apt install cmake 
+```
 
---------------
 build 3rdparty
 --------------
 
@@ -20,10 +21,9 @@ Navigate to 3rdparty folder and call build.sh script.
 
 ```
 cd 3rdparty
-./build.sh
+MAKEFLAGS=-j4 ./build.sh
 ```
 
--------------
 build project
 -------------
 
