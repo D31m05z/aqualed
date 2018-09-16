@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-
+#include <vector>
 
 static void error_callback(int error, const char* description)
 {
@@ -17,6 +17,12 @@ static void error_callback(int error, const char* description)
 
 int main(int, char**)
 {
+    std::vector<int> PINS = { 1, 2, 3, 4 };
+
+    if(PINS.size() < 4) {
+        return 1;
+    }
+
     // Setup window
     glfwSetErrorCallback(error_callback);
     if (!glfwInit())
@@ -27,20 +33,16 @@ int main(int, char**)
 
     // Setup ImGui binding
     ImGui_ImplGlfw_Init(window, true);
-
-    bool show_test_window = true;
-    bool show_calibration_window = false;
-    ImVec4 clear_color = ImColor(114, 144, 154);
-
-
-   int bright = 0;
+    ImVec4 color = ImColor(255, 255, 255, 255);
 
     printf ("PWM test\n") ;
 
     if (wiringPiSetup () == -1)
         return 1;
 
-    pinMode (1, PWM_OUTPUT) ;
+    for(size_t i = 0; i<PINS.size(); i++) {
+        pinMode (PINS[i], PWM_OUTPUT);
+    }
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -48,53 +50,38 @@ int main(int, char**)
         glfwPollEvents();
         ImGui_ImplGlfw_NewFrame();
         ImGui::Begin("aquaLED");
-        {
-            static float f = 0.0f;
-            ImGui::Text("turn on");
-            if(ImGui::SliderFloat("float", &f, 0.0f, 1024.0f)) {
-               pwmWrite(1, f);
-	    }
 
-            ImGui::ColorEdit3("clear color", (float*)&clear_color);
+        ImGui::ColorEdit4("LED color", (float*)&color);
+        if(ImGui::Button("R+"))  color.x += 1.0f / 100.0f;
+        if(ImGui::Button("R-"))  color.x -= 1.0f / 100.0f;
+        if(ImGui::Button("G+"))  color.y += 1.0f / 100.0f;
+        if(ImGui::Button("G-"))  color.y -= 1.0f / 100.0f;
+        if(ImGui::Button("B+"))  color.z += 1.0f / 100.0f;
+        if(ImGui::Button("B-"))  color.z -= 1.0f / 100.0f;
+        if(ImGui::Button("W+"))  color.w += 1.0f / 100.0f;
+        if(ImGui::Button("W-"))  color.w -= 1.0f / 100.0f;
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::End();
 
-            if (ImGui::Button("Calibration")) show_calibration_window ^= 1;
-            if (ImGui::Button("LED test")) show_test_window ^= 1;
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::Begin("profile");
+        if(ImGui::Button("zero")) {
+            color = ImVec4(0, 0, 0, 0);
+        }
+        if(ImGui::Button("max")) {
+            color = ImVec4(255, 255, 255, 255);
         }
         ImGui::End();
 
-        if (show_calibration_window)
-        {
-            ImGui::SetNextWindowSize(ImVec2(50,50), ImGuiSetCond_FirstUseEver);
-            ImGui::Begin("Calibration", &show_test_window);
-            ImGui::Text("rasberry");
-            ImGui::End();
-	    
-	    /*for (bright = 0 ; bright < 1024 ; ++bright)
-	    {
-	        pwmWrite (1, bright) ;
-	    }
-
-	    for (bright = 1023 ; bright >= 0 ; --bright)
-	    {
-	        pwmWrite (1, bright) ;
-            }*/
-
-        }
-
-        if (show_test_window)
-        {
-            ImGui::Begin("test");
-            ImGui::Button("start");
-            ImGui::End();
-        }
+        pwmWrite(PINS[0], color.x);
+        pwmWrite(PINS[1], color.y);
+        pwmWrite(PINS[2], color.z);
+        pwmWrite(PINS[3], color.w);
 
         // Rendering
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
-        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+        glClearColor(color.x, color.y, color.z, color.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui::Render();
         glfwSwapBuffers(window);
