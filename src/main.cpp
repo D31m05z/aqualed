@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 
 #include <wiringPi.h>
+#include <softPwm.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -17,9 +18,10 @@ static void error_callback(int error, const char* description)
 
 int main(int, char**)
 {
-    std::vector<int> PINS = { 1, 2, 3, 4 };
+    std::vector<int> PINS = { 0, 2, 3, 4 };
 
     if(PINS.size() < 4) {
+        printf("You need to define 4 GPIO pin for softPWM.\n");
         return 1;
     }
 
@@ -37,12 +39,24 @@ int main(int, char**)
 
     printf ("PWM test\n") ;
 
-    if (wiringPiSetup () == -1)
+    if (wiringPiSetup () == -1) {
+        printf("wiringPiSetup failed\n");
         return 1;
+    }
 
-    for(size_t i = 0; i<PINS.size(); i++) {
+    // create soft PWM control
+    for(size_t i = 0; i < PINS.size(); i++) {
+        int ret = softPwmCreate(PINS[i], 0, 100);
+        if(ret != 0) {
+            printf("GPIO: %d error : %d\n", PINS[i], ret);
+            return 1;
+        }   
+    }
+        	                                            
+    /*for(size_t i = 0; i<PINS.size(); i++) {
         pinMode (PINS[i], PWM_OUTPUT);
     }
+    */
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -72,10 +86,17 @@ int main(int, char**)
         }
         ImGui::End();
 
+	softPwmWrite(PINS[0], color.x);
+	softPwmWrite(PINS[1], color.y);
+	softPwmWrite(PINS[2], color.z);
+	softPwmWrite(PINS[3], color.w);
+
+	/*
         pwmWrite(PINS[0], color.x);
         pwmWrite(PINS[1], color.y);
         pwmWrite(PINS[2], color.z);
         pwmWrite(PINS[3], color.w);
+        */
 
         // Rendering
         int display_w, display_h;
